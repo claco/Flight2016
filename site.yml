@@ -3,6 +3,8 @@
   tasks:
     - name: Ping all Raspberries
       ping:
+  roles:
+    - move_root
 
 - include: servers.yml
   tags: servers
