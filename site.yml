@@ -1,0 +1,12 @@
+---
+- hosts: raspberries
+  tasks:
+    - name: Ping all Raspberries
+      ping:
+
+- include: servers.yml
+  tags: servers
+
+- include: workstations.yml
+  tags: workstations
+

@@ -1,0 +1,5 @@
+---
+- hosts: servers
+  roles:
+    - { name: apt, when: ansible_pkg_mgr == 'apt', tags: apt }
+

@@ -1,0 +1,21 @@
+macbook ansible_host=localhost ansible_connection=local
+clear   ansible_host=192.168.2.2
+black   ansible_host=192.168.2.3
+blue    ansible_host=192.168.2.4
+orange  ansible_host=192.168.2.5
+
+[raspberries]
+clear
+black
+blue
+orange
+
+[servers]
+clear
+black
+
+[workstations]
+blue
+orange
+macbook
+
