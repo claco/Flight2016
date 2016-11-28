@@ -1,0 +1,61 @@
+---
+- hosts: localhost
+  tasks:
+    - name: Install PyRax
+      pip: name=pyrax state=present
+
+    - name: Create Load Balancer
+      rax_clb:
+        credentials: ~/.rackspace/personal
+        name: flight-load-balancer
+        port: 80
+        protocol: HTTP
+        type: SERVICENET
+        timeout: 30
+        region: IAD
+        wait: yes
+        state: present
+      register: flight_load_balancer
+
+    - name: Build Servers
+      rax:
+        credentials: ~/.rackspace/personal
+        name: flight-server-%02d
+        flavor: performance1-1
+        image: Debian 8 (Jessie) (PVHVM)
+        region: IAD
+        state: present
+        count: 2
+        count_offset: 1
+        exact_count: yes
+        group: flight
+        wait: yes
+      register: flight_servers
+
+    - name: Add Servers to Inventory Group
+      add_host:
+        hostname: "{{ item.name }}"
+        ansible_host: "{{ item.rax_accessipv4 }}"
+        ansible_ssh_pass: "{{ item.rax_adminpass }}"
+        groups: flight_cloud_servers
+      with_items: "{{ flight_servers.instances }}"
+      when: flight_servers.action == 'create'
+
+    - name: Add servers to Load balancer
+      rax_clb_nodes:
+        credentials: ~/.rackspace/personal
+        load_balancer_id: "{{ flight_load_balancer.balancer.id }}"
+        address: "{{ item.rax_networks.private|first }}"
+        port: 80
+        condition: enabled
+        type: primary
+        wait: yes
+        region: IAD
+      with_items: "{{ flight_servers.instances }}"
+      when: flight_servers.action == 'create'
+
+- hosts: flight_cloud_servers
+  user: root
+  tasks:
+    - apt: update_cache=yes
+
