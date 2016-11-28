@@ -1,0 +1,31 @@
+---
+- hosts: localhost
+  tasks:
+    - name: Check Docker Status
+      shell: pgrep 'com.docker.osx.hyperkit.linux' || true
+      ignore_errors: true
+      changed_when: false
+      register: docker_status
+
+    - name: Install Docker
+      homebrew_cask: name=docker state=present
+      when: docker_status.stdout == ""
+
+    - name: Start Docker
+      shell: open '/Applications/Docker.app' && sleep 15
+      when: docker_status.stdout == ""
+
+    - name: Install Docker-Py
+      pip: name=docker-py state=present
+    
+    - name: Build Apt Cacher Image
+      docker_image:
+        path: ./
+        name: apt-cacher-ng
+
+    - name: Start Apt Cacher Container
+      docker_container:
+        name: apt-cacher-ng
+        image: apt-cacher-ng:latest
+        ports:
+          - 3142:3142
